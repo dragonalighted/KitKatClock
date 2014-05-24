@@ -97,7 +97,7 @@ $(function(){$.fn.kitkatclock=function(options){
                 am_pm.trigger("change");
             }
             container.css({
-                width:clock_dim, height:clock_dim+70,
+                width:clock_dim, height:clock_dim+(fontSize*2)+10,
                 zIndex:9999999,
                 backgroundColor:colors.background,
                 borderRadius:"3px", padding:"3px",
@@ -130,8 +130,16 @@ $(function(){$.fn.kitkatclock=function(options){
                 top:clock_dim+10, left:0,
                 width:"100%", textAlign:"center"
             });
+            var done_button=$("<div>Done</div>").css({
+                width:"100%", cursor:"pointer",
+                textAlign:"center",
+                fontSize:fontSize*(2/3),
+                position:"absolute",
+                borderTop:"1px solid #ccc",
+                top:clock_dim+20+fontSize, left:0
+            }).on("click", finalize_time);
             canvas_container.append(clock).append(hand).append(numerals)
-            container.append(canvas_container).append(time_display);
+            container.append(canvas_container).append(time_display).append(done_button);
             $(".kitkat-clock-am-pm").css({
                 marginTop:"-20px", marginLeft:"10px"
             });
@@ -198,9 +206,9 @@ $(function(){$.fn.kitkatclock=function(options){
                         setTimeout(function(){allow_draw=true;}, 100);
                         //draw_hand(pi/2);
                     }
-                    else {
+                    /*else {
                         finalize_time();
-                    }
+                    }*/
                 }
             });
         }
