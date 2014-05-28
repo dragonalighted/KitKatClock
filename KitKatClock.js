@@ -338,8 +338,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                     var use_event;
                     if (event.type=="touchmove" ||
                         event.type=="touchstart"){
-                        event.offsetX=event.originalEvent.touches[0].clientX;
-                        event.offsetY=event.originalEvent.touches[0].clientY;
+                        event.offsetX=event.originalEvent.touches[0].pageX;
+                        event.offsetY=event.originalEvent.touches[0].pageY;
                         var cur_offset=canvas_container.offset();
                         event.offsetX-=cur_offset.left;
                         event.offsetY-=cur_offset.top;
