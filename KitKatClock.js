@@ -418,8 +418,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 });
                 if (input.val().toUpperCase().indexOf("AM")!=-1){
                     am_pm[0].checked=true;
-                    am_pm.trigger("change");
                 }
+                am_pm.trigger("change");
                 container.css({
                     width:clock_dim, height:clock_dim+(fontSize*2)+10,
                     zIndex:9999999,
