@@ -77,19 +77,19 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                     fontSize=parseFloat(fontSize);
             }
             var fontFamily=options.fontFamily||"Verdana, sans-serif";
-            var colors=options["colors"]||{};
-            colors.text=colors["text"]||"#FFFFFF";
-            colors.clock=colors["clock"]||"#050505";
-            colors.numerals=colors["numerals"]||colors["text"];
-            colors.hand=colors["hand"]||'#960000';
-            colors.background=colors["background"]||"#222222";
-            colors.meridian_background_on=colors["meridian_background_on"]||colors["hand"];
-            colors.meridian_background_off=colors["meridian_background_off"]||null;
-            colors.meridian_text=colors["meridian_text"]||colors["text"];
-            colors.top_indicator_selected=colors["top_indicator_selected"]||colors["hand"];
-            colors.top_indicator_deselected=colors["top_indicator_deselected"]||colors["text"];
-            colors.top_indicator_background=colors["top_indicator_background"]||colors["clock"];
-            colors.border=colors["border"]||"#CCCCCC";
+            var colors=options.colors||{};
+            colors.text=colors.text||"#FFFFFF";
+            colors.clock=colors.clock||"#050505";
+            colors.numerals=colors.numerals||colors.text;
+            colors.hand=colors.hand||'#960000';
+            colors.background=colors.background||"#222222";
+            colors.meridian_background_on=colors.meridian_background_on||colors.hand;
+            colors.meridian_background_off=colors.meridian_background_off||null;
+            colors.meridian_text=colors.meridian_text||colors.text;
+            colors.top_indicator_selected=colors.top_indicator_selected||colors.hand;
+            colors.top_indicator_deselected=colors.top_indicator_deselected||colors.text;
+            colors.top_indicator_background=colors.top_indicator_background||colors.clock;
+            colors.border=colors.border||"#CCCCCC";
             for (var key in colors){
                 colors[key]=normalize_color(colors[key]);
             }
