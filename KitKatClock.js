@@ -16,7 +16,26 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
 */
 (function( $ ) {
     window["__kkc"]=[];
-    window["pi"]=Math.PI;
+    var vendor_prefixes="webkit moz ms o".split(" ");
+    var supported={'css3':false, 'canvas':false};
+    var test=document.createElement("canvas");
+    for (var i=0;i<vendor_prefixes.length;i++){
+        if (test.style["-"+vendor_prefixes[i]+"-transform"]!==undefined){
+            supported.css3=true;
+            break;
+        }
+    }
+    if (!!test.getContext)
+        supported.canvas=true;
+    if (!supported.css3){
+        console.log("KitKatClock running in compatibility mode, no CSS3 support");
+        __kkc.compatibility_mode=true;
+    }
+    if (!supported.canvas){
+        console.log("KitKatClock disabled, no canvas support");
+        __kkc="KitKatClock Disabled";
+        return;
+    }
     __kkc.allow_draw=true;
     __kkc.hour_mode=true;
     __kkc.mouse_down=false;
@@ -45,14 +64,14 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             numbers.fillStyle=colors.numerals;
             numbers.font=options.fontSize+"px "+options.fontFamily;
             numbers.textAlign="center";
-            var radians=pi/2;
+            var radians=Math.PI/2;
             for (var i=0;i<12;i++){
                 var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.75));
                 var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.75));
                 numbers.fillText(i==0?12:i, x, y);
-                radians+=pi/6;
+                radians+=Math.PI/6;
             }
-            move_hand(parseInt(container.attr("hour"))*pi/6);
+            move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
             hours.css("color", colors.hand);
             minutes.css("color", "");
         }
@@ -63,25 +82,45 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             numbers.fillStyle=colors.numerals;
             numbers.font=options.fontSize+"px "+options.fontFamily;
             numbers.textAlign="center";
-            var radians=pi/2;
+            var radians=Math.PI/2;
             for (var i=0;i<12;i++){
                 var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.6));
                 var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.6));
                 numbers.fillText(i*5, x, y);
-                radians+=pi/6;
+                radians+=Math.PI/6;
             }
-            move_hand(parseInt(container.attr("minute"))*pi/30);
+            move_hand(parseInt(container.attr("minute"))*Math.PI/30, options);
             hours.css("color", "");
             minutes.css("color", colors.hand);
         }
-        function move_hand(radians){
-            $("#kitkatclock .kkc-canvas-hand").css({
-                    '-webkit-transform': "rotate("+(radians*180/pi)+"deg)",
-                    '-moz-transform': "rotate("+(radians*180/pi)+"deg)",
-                    '-ms-transform': "rotate("+(radians*180/pi)+"deg)",
-                    '-o-transform': "rotate("+(radians*180/pi)+"deg)",
-                    'transform': "rotate("+(radians*180/pi)+"deg)"
-            });
+        function move_hand(radians, options){
+            if (!__kkc.compatibility_mode){
+                $("#kitkatclock .kkc-canvas-hand").css({
+                        '-webkit-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                        '-moz-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                        '-ms-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                        '-o-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                        'transform': "rotate("+(radians*180/Math.PI)+"deg)"
+                });
+            }
+            else{
+                radians+=Math.PI/2;
+                var colors=options.colors;
+                hand.clearRect(0, 0, options.size, options.size);
+                var hand_width=options.fontSize*1.35;
+                var a_x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.5));
+                var a_y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.5));
+                hand.beginPath();
+                hand.moveTo(radius, radius);
+                hand.lineTo(a_x, a_y);
+                hand.strokeStyle=colors.hand;
+                hand.lineWidth=8;
+                hand.stroke();
+                hand.closePath();
+                hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
+                hand.fillStyle=colors.hand;
+                hand.fill();
+            }
         }
         var colors=options.colors;
         var container=$("#kitkatclock");
@@ -97,11 +136,21 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             position:"absolute", top:0, left:0,
             padding:"0px 10px"
         })[0].getContext("2d");
-        var hand=$("#kitkatclock .kkc-canvas-hand").attr({
-            width:options.fontSize*1.35, height:options.size
-        }).css({
-            position:"absolute", top:0, left:"calc(50% - "+options.fontSize*1.35/2+"px)",
-        })[0].getContext("2d");
+        if (!__kkc.compatibility_mode){
+            var hand=$("#kitkatclock .kkc-canvas-hand").attr({
+                width:options.fontSize*1.35, height:options.size
+            }).css({
+                position:"absolute", top:0, left:options.size/2 - 17,
+            })[0].getContext("2d");
+        }
+        else {
+            var hand=$("#kitkatclock .kkc-canvas-hand").attr({
+                width:options.size, height:options.size
+            }).css({
+                position:"absolute", top:0, left:0,
+                padding:"0px 10px"
+            })[0].getContext("2d");
+        }
         var numbers=$("#kitkatclock .kkc-canvas-numbers").attr({
             width:options.size, height:options.size
         }).css({
@@ -176,27 +225,32 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var radius=options.size/2;
         clock.clearRect(0, 0, options.size, options.size);
         clock.fillStyle=colors.clock;
-        clock.arc(radius, radius, radius, 0, 2*pi);
+        clock.arc(radius, radius, radius, 0, 2*Math.PI);
         clock.fill();
-        hand.clearRect(0, 0, options.size, options.size);
-        var hand_width=options.fontSize*1.35;
-        var a_x=hand_width/2;
-        var a_y=radius+(-1*(radius-options.fontSize/1.5));
-        hand.beginPath();
-        hand.moveTo(hand_width/2, radius);
-        hand.lineTo(a_x, a_y);
-        hand.strokeStyle=colors.hand;
-        hand.lineWidth=8;
-        hand.stroke();
-        hand.closePath();
-        hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*pi);
-        hand.fillStyle=colors.hand;
-        hand.fill();
+        if (!__kkc.compatibility_mode){
+            hand.clearRect(0, 0, options.size, options.size);
+            var hand_width=options.fontSize*1.35;
+            var a_x=hand_width/2;
+            var a_y=radius+(-1*(radius-options.fontSize/1.5));
+            hand.beginPath();
+            hand.moveTo(hand_width/2, radius);
+            hand.lineTo(a_x, a_y);
+            hand.strokeStyle=colors.hand;
+            hand.lineWidth=8;
+            hand.stroke();
+            hand.closePath();
+            hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
+            hand.fillStyle=colors.hand;
+            hand.fill();
+        }
+        else {
+            move_hand(Math.PI/2, options);
+        }
         __kkc.allow_draw=true;
         __kkc.hour_mode=true;
         __kkc.mouse_down=false;
         draw_hours(options);
-        move_hand((h==12?0:h)*(pi/6));
+        move_hand((h==12?0:h)*(Math.PI/6), options);
         am_btn.on("click", function(){
             am_pm.html("AM");
             am_btn.css("background", colors.meridian_background_on);
@@ -244,8 +298,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 pieces/=2;
                 var z=Math.sqrt(x*x+y*y);
                 var theta=Math.asin(y/z);
-                var closest=(pi/pieces)*Math.round(theta/(pi/pieces));
-                closest/=pi;
+                var closest=(Math.PI/pieces)*Math.round(theta/(Math.PI/pieces));
+                closest/=Math.PI;
                 closest*=pieces;
                 var x_pos=x>0;
                 var start=pieces/2;
@@ -255,9 +309,9 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 }
                 var number=start+closest;
                 var radians=0;
-                radians+=number*pi/(__kkc.hour_mode?6:30);
-                radians=(radians>2*pi)?radians-(2*pi):radians;
-                move_hand(radians);
+                radians+=number*Math.PI/(__kkc.hour_mode?6:30);
+                radians=(radians>2*Math.PI)?radians-(2*Math.PI):radians;
+                move_hand(radians, options);
                 if (__kkc.hour_mode){
                     container.attr("hour", number);
                     var minute=container.attr("minute")||0;
@@ -285,7 +339,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                     draw_minutes(options);
                     __kkc.allow_draw=false;
                     setTimeout(function(){__kkc.allow_draw=true;}, 100);
-                    //draw_hand(pi/2);
                 }
             }
         });
@@ -357,8 +410,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         }).show();
     }
 
-
-    //add event handelers
     $.fn.kitkatclock=function(options){
         function normalize_color(c){
             if (c==null)
@@ -456,7 +507,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             });
         })
     };
-    //add clock elements
+
     $(function(){
         var container=$("<div id='kitkatclock'>").hide();
         var time_cont=$("<div class='kkc-time-cont'>");
