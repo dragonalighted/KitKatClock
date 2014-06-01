@@ -14,7 +14,7 @@ this license, visit
 http://creativecommons.org/licenses/by-nc-sa/4.0/
 =================================================
 */
-(function( $ ) {
+;(function( $ ) {
     window["__kkc"]=[];
     var vendor_prefixes="webkit moz ms o".split(" ");
     var supported={'css3':false, 'canvas':false};
@@ -25,6 +25,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             break;
         }
     }
+    if (test.style["transform"]!==undefined)
+        supported.css3=true;
     if (!!test.getContext)
         supported.canvas=true;
     if (!supported.css3){
@@ -531,4 +533,4 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 __kkc.finalize_wrap();
         });
     })
-}(jQuery))
+}(jQuery));
