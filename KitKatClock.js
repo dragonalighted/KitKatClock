@@ -298,14 +298,14 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 var pieces=__kkc.hour_mode?12:60;
                 var x=event.offsetX-radius;
                 var y=event.offsetY-radius;
-                x/=radius;
+                x/=radius*-1;
                 y/=radius*-1;
                 if (x>1 || y>1 || (x==0&&y==0))
                     return;
-                theta=Math.atan2(-1*x,y);
-                if (theta<0)
-                    theta=(2*Math.PI)+theta;
-                theta=(2*Math.PI)-theta;
+                var theta=Math.atan2(x,y);
+                if (theta>0)
+                    theta=(2*Math.PI)-theta;
+                theta=Math.abs(theta);
                 var number=(Math.PI/(pieces/2))*Math.round(theta/(Math.PI/(pieces/2)))/(Math.PI/(pieces/2));
                 var radians=0;
                 radians+=number*Math.PI/(__kkc.hour_mode?6:30);
