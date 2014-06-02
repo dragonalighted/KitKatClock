@@ -36,6 +36,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
     if (!supported.canvas){
         console.log("KitKatClock disabled, no canvas support");
         __kkc="KitKatClock Disabled";
+        $.fn.kitkatclock=function(){return this;};
         return;
     }
     __kkc.allow_draw=true;
@@ -297,19 +298,15 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 var pieces=__kkc.hour_mode?12:60;
                 var x=event.offsetX-radius;
                 var y=event.offsetY-radius;
-                pieces/=2;
-                var z=Math.sqrt(x*x+y*y);
-                var theta=Math.asin(y/z);
-                var closest=(Math.PI/pieces)*Math.round(theta/(Math.PI/pieces));
-                closest/=Math.PI;
-                closest*=pieces;
-                var x_pos=x>0;
-                var start=pieces/2;
-                if (!x_pos){
-                    start*=3;
-                    closest*=-1;
-                }
-                var number=start+closest;
+                x/=radius;
+                y/=radius*-1;
+                if (x>1 || y>1 || (x==0&&y==0))
+                    return;
+                theta=Math.atan2(-1*x,y);
+                if (theta<0)
+                    theta=(2*Math.PI)+theta;
+                theta=(2*Math.PI)-theta;
+                var number=(Math.PI/(pieces/2))*Math.round(theta/(Math.PI/(pieces/2)))/(Math.PI/(pieces/2));
                 var radians=0;
                 radians+=number*Math.PI/(__kkc.hour_mode?6:30);
                 radians=(radians>2*Math.PI)?radians-(2*Math.PI):radians;
@@ -345,6 +342,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             }
         });
         done.on("click", __kkc.finalize);
+        container.css({
+            width:options.size+20,
+            border:"3px solid "+colors.border,
+            fontSize:options.fontSize, textAlign:"center",
+            color:colors.text, background:colors.background,
+            fontFamily:options.fontFamily, position:"absolute"
+        });
         var input_offset=$(__kkc.opener).offset();
         var window_size={
             width:$(window).width(),
@@ -403,11 +407,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             plugin_position.top=current_viewport.top-(plugin_size.height-window_size.height)/2;
         }
         container.css({
-            width:options.size+20,
-            border:"3px solid "+colors.border,
-            fontSize:options.fontSize, textAlign:"center",
-            color:colors.text, background:colors.background,
-            fontFamily:options.fontFamily, position:"absolute",
             top: plugin_position.top, left: plugin_position.left
         }).show();
     }
