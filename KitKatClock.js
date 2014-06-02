@@ -165,7 +165,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var done=$("#kitkatclock .kkc-done-btn");
         time_cont.css({
             height:options.fontSize, width:"100%",
-            padding:"8px 0px 8px 0px",
+            padding:"0px 0px 12px 0px",
             color:colors.text, background:colors.top_indicator_background
         });
         am_pm.css({
