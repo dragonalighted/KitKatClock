@@ -45,6 +45,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
     __kkc.hour_mode=true;
     __kkc.mouse_down=false;
     __kkc.finalize=false;
+    __kkc.degrade=true;
     __kkc.finalize_wrap=function(){
         if (__kkc.finalize!==false)
             __kkc.finalize();
@@ -465,6 +466,15 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             });
         })
     };
+    $.fn.kitkatclock.noDegrade=function(b){
+        if (b!==true){
+            __kkc.degrade=false;
+            return;
+        }
+        else if (__kkc.degrade) {
+            $("input[data-role='time']").kitkatclock();
+        }
+    };
 
     $(function(){
         var container=$("<div id='kitkatclock'>").hide();
@@ -488,5 +498,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 (typeof attr === 'undefined' || attr === false))
                 __kkc.finalize_wrap();
         });
+        $().kitkatclock.noDegrade(true);
     })
 }(jQuery));
