@@ -265,22 +265,23 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             am_btn.css("background", colors.meridian_background_off);
         });
         canvas_cont.on("mousemove mousedown mouseup touchstart touchend touchcancel click touchmove", function(event){
-            if (!__kkc.allow_draw ||
-               event.offsetX>options.size ||
-               event.offsetY>options.size)
+            if (!__kkc.allow_draw)
                 return;
             if ($(event.target).is(am_btn)||
                 $(event.target).is(pm_btn))
                 return;
             var use_event;
-            if (event.type=="touchmove" ||
-                event.type=="touchstart"){
-                event.offsetX=event.originalEvent.touches[0].pageX;
-                event.offsetY=event.originalEvent.touches[0].pageY;
-                var cur_offset=canvas_cont.offset();
-                event.offsetX-=cur_offset.left;
-                event.offsetY-=cur_offset.top;
+            var el_offset=canvas_cont.offset();
+            var event_offset={
+                left:event.pageX,
+                top:event.pageY
+            };
+            if (!event_offset.left){
+                event_offset.left=event.originalEvent.touches[0].pageX;
+                event_offset.top=event.originalEvent.touches[0].pageY;
             }
+            var offsetX=event_offset.left-el_offset.left;
+            var offsetY=event_offset.top-el_offset.top;
             switch (event.type){
                 case "touchmove":use_event="mousemove";event.preventDefault();break;
                 case "touchend":use_event="mouseup";break;
@@ -295,9 +296,10 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             if (use_event=="click" ||
                 use_event=="mousedown" ||
                 (use_event=="mousemove" && __kkc.mouse_down)){
+                window._e=event;
                 var pieces=__kkc.hour_mode?12:60;
-                var x=event.offsetX-radius;
-                var y=event.offsetY-radius;
+                var x=offsetX-radius;
+                var y=offsetY-radius;
                 x/=radius*-1;
                 y/=radius*-1;
                 if (x>1 || y>1 || (x==0&&y==0))
@@ -351,10 +353,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         });
         var input_offset=$(__kkc.opener).offset();
         var window_size={
-            width:$(window).width(),
-            height:$(window).height()
-        }
-        var document_size={
             width:$(document).width(),
             height:$(document).height()
         }
@@ -376,14 +374,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             left:current_scroll.left,
             right:current_scroll.left+window_size.width
         };
-        while (plugin_position.top+plugin_size.height>document_size.height &&
-                plugin_position.top>0){
-            plugin_position.top-=1;
-        }
-        while (plugin_position.left+plugin_size.width>document_size.width &&
-                plugin_position.left>0){
-            plugin_position.left-=1;
-        }
         if (plugin_size.width<=window_size.width){
             while (plugin_position.left<current_viewport.left){
                 plugin_position.left++;
