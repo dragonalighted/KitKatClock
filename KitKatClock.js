@@ -30,8 +30,10 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
     if (!!test.getContext)
         supported.canvas=true;
     if (!supported.css3){
-        console.log("KitKatClock running in compatibility mode, no CSS3 support");
-        __kkc.compatibility_mode=true;
+        console.log("KitKatClock disabled, no CSS3 support");
+        __kkc="KitKatClock Disabled";
+        $.fn.kitkatclock=function(){return this;};
+        return;
     }
     if (!supported.canvas){
         console.log("KitKatClock disabled, no canvas support");
@@ -97,33 +99,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             minutes.css("color", colors.hand);
         }
         function move_hand(radians, options){
-            if (!__kkc.compatibility_mode){
-                $("#kitkatclock .kkc-canvas-hand").css({
-                        '-webkit-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                        '-moz-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                        '-ms-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                        '-o-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                        'transform': "rotate("+(radians*180/Math.PI)+"deg)"
-                });
-            }
-            else{
-                radians+=Math.PI/2;
-                var colors=options.colors;
-                hand.clearRect(0, 0, options.size, options.size);
-                var hand_width=options.fontSize*1.35;
-                var a_x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.5));
-                var a_y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.5));
-                hand.beginPath();
-                hand.moveTo(radius, radius);
-                hand.lineTo(a_x, a_y);
-                hand.strokeStyle=colors.hand;
-                hand.lineWidth=8;
-                hand.stroke();
-                hand.closePath();
-                hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
-                hand.fillStyle=colors.hand;
-                hand.fill();
-            }
+            $("#kitkatclock .kkc-canvas-hand").css({
+                    '-webkit-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                    '-moz-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                    '-ms-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                    '-o-transform': "rotate("+(radians*180/Math.PI)+"deg)",
+                    'transform': "rotate("+(radians*180/Math.PI)+"deg)"
+            });
         }
         var colors=options.colors;
         var container=$("#kitkatclock");
@@ -139,21 +121,11 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             position:"absolute", top:0, left:0,
             padding:"0px 10px"
         })[0].getContext("2d");
-        if (!__kkc.compatibility_mode){
-            var hand=$("#kitkatclock .kkc-canvas-hand").attr({
-                width:options.fontSize*1.35, height:options.size
-            }).css({
-                position:"absolute", top:0, left:options.size/2 - 17,
-            })[0].getContext("2d");
-        }
-        else {
-            var hand=$("#kitkatclock .kkc-canvas-hand").attr({
-                width:options.size, height:options.size
-            }).css({
-                position:"absolute", top:0, left:0,
-                padding:"0px 10px"
-            })[0].getContext("2d");
-        }
+        var hand=$("#kitkatclock .kkc-canvas-hand").attr({
+            width:options.fontSize*1.35, height:options.size
+        }).css({
+            position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px + 2px)",
+        })[0].getContext("2d");
         var numbers=$("#kitkatclock .kkc-canvas-numbers").attr({
             width:options.size, height:options.size
         }).css({
@@ -230,25 +202,20 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         clock.fillStyle=colors.clock;
         clock.arc(radius, radius, radius, 0, 2*Math.PI);
         clock.fill();
-        if (!__kkc.compatibility_mode){
-            hand.clearRect(0, 0, options.size, options.size);
-            var hand_width=options.fontSize*1.35;
-            var a_x=hand_width/2;
-            var a_y=radius+(-1*(radius-options.fontSize/1.5));
-            hand.beginPath();
-            hand.moveTo(hand_width/2, radius);
-            hand.lineTo(a_x, a_y);
-            hand.strokeStyle=colors.hand;
-            hand.lineWidth=8;
-            hand.stroke();
-            hand.closePath();
-            hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
-            hand.fillStyle=colors.hand;
-            hand.fill();
-        }
-        else {
-            move_hand(Math.PI/2, options);
-        }
+        hand.clearRect(0, 0, options.size, options.size);
+        var hand_width=options.fontSize*1.35;
+        var a_x=hand_width/2;
+        var a_y=radius+(-1*(radius-options.fontSize/1.5));
+        hand.beginPath();
+        hand.moveTo(hand_width/2, radius);
+        hand.lineTo(a_x, a_y);
+        hand.strokeStyle=colors.hand;
+        hand.lineWidth=8;
+        hand.stroke();
+        hand.closePath();
+        hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
+        hand.fillStyle=colors.hand;
+        hand.fill();
         __kkc.allow_draw=true;
         __kkc.hour_mode=true;
         __kkc.mouse_down=false;
