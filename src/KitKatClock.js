@@ -58,7 +58,15 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             var h=hours.html().replace("&nbsp;", "");
             var m=minutes.html();
             var is_am=am_pm.html();
-            __kkc.opener.value=h+":"+m+" "+is_am;
+            if (__kkc.opener.type=="text"){
+                __kkc.opener.value=h+":"+m+" "+is_am;
+            }
+            else {
+                var new_h=parseInt(h==12?0:h)+(is_am=="AM"?0:12);
+                var new_v=(new_h<10?"0":"")+new_h+":"+m;
+                console.log(new_v);
+                __kkc.opener.value=new_v;
+            }
             var id=parseInt($(__kkc.opener).attr("kkc-id"));
             __kkc[id].time=h+":"+m+" "+is_am;
             container.hide();
@@ -415,7 +423,23 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         return this.each(function(){
             options=options||{};
             options.time=options.time||"12:00 AM";
-            this.value=options.time;
+            var time=options.time.split(" ")[0];
+            var hour=time.split(":")[0];
+            hour=parseInt(hour);
+            if (hour==12){
+                hour=0;
+            }
+            var minute=time.split(":")[1];
+            var is_am=options.time.split(" ")[1].toLowerCase()=="am";
+            if (!is_am)
+                hour+=12;
+            if (hour<10)
+                hour="0"+hour;
+            var new_v=hour+":"+minute;
+            if (this.type=="time")
+                this.value=new_v;
+            else
+                this.value=options.time;
             var clock_dim=options.size||350;
             if (typeof clock_dim !== "number"){
                 if (clock_dim.indexOf("pt"))
@@ -471,7 +495,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             return;
         }
         else if (__kkc.degrade) {
-            $("input[data-role='time']").kitkatclock();
+            $("input[data-role='time'], input[type='time']").kitkatclock();
         }
     };
 
