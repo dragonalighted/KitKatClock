@@ -125,7 +125,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var hand=$("#kitkatclock .kkc-canvas-hand").attr({
             width:options.fontSize*1.35, height:options.size
         }).css({
-            position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px + 2px)",
+            position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px)",
         })[0].getContext("2d");
         var numbers=$("#kitkatclock .kkc-canvas-numbers").attr({
             width:options.size, height:options.size
