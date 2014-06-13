@@ -264,7 +264,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             if (use_event=="click" ||
                 use_event=="mousedown" ||
                 (use_event=="mousemove" && __kkc.mouse_down)){
-                window._e=event;
                 var pieces=__kkc.hour_mode?12:60;
                 var x=offsetX-radius;
                 var y=offsetY-radius;
