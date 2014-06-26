@@ -17,26 +17,18 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
 ;(function( $ ) {
     window["__kkc"]=[];
     var vendor_prefixes="webkit moz ms o".split(" ");
-    var supported={'css3':false, 'canvas':false};
-    var test=document.createElement("canvas");
+    var supported=false;
+    var test=document.createElement("div");
     for (var i=0;i<vendor_prefixes.length;i++){
         if (test.style["-"+vendor_prefixes[i]+"-transform"]!==undefined){
-            supported.css3=true;
+            supported=true;
             break;
         }
     }
     if (test.style["transform"]!==undefined)
-        supported.css3=true;
-    if (!!test.getContext)
-        supported.canvas=true;
-    if (!supported.css3){
+        supported=true;
+    if (!supported){
         console.log("KitKatClock disabled, no CSS3 support");
-        __kkc="KitKatClock Disabled";
-        $.fn.kitkatclock=function(){return this;};
-        return;
-    }
-    if (!supported.canvas){
-        console.log("KitKatClock disabled, no canvas support");
         __kkc="KitKatClock Disabled";
         $.fn.kitkatclock=function(){return this;};
         return;
@@ -58,31 +50,35 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             var h=hours.html().replace("&nbsp;", "");
             var m=minutes.html();
             var is_am=am_pm.html();
-            if (__kkc.opener.type=="text"){
-                __kkc.opener.value=h+":"+m+" "+is_am;
-            }
-            else {
-                var new_h=parseInt(h==12?0:h)+(is_am=="AM"?0:12);
-                var new_v=(new_h<10?"0":"")+new_h+":"+m;
-                console.log(new_v);
-                __kkc.opener.value=new_v;
-            }
+            __kkc.opener.value=h+":"+m+" "+is_am;
             var id=parseInt($(__kkc.opener).attr("kkc-id"));
             __kkc[id].time=h+":"+m+" "+is_am;
             container.hide();
         }
         function draw_hours(options){
+            numbers.html("").css({
+                width:options.size,
+                height:options.size,
+                top:0, left:0, opacity:1
+            });
             var colors=options.colors;
-            numbers.clearRect(0, 0, options.size, options.size);
-            numbers.textBaseline="middle";
-            numbers.fillStyle=colors.numerals;
-            numbers.font=options.fontSize+"px "+options.fontFamily;
-            numbers.textAlign="center";
+            numbers.css({
+                color:colors.numerals
+            })
             var radians=Math.PI/2;
             for (var i=0;i<12;i++){
                 var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.75));
                 var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.75));
-                numbers.fillText(i==0?12:i, x, y);
+                var temp=$("<div>").html(i==0?12:i).css({
+                    position:"absolute",
+                    top:y, left:x
+                });
+                numbers.append(temp);
+                temp.css({
+                    marginTop:temp.height()/-2,
+                    marginLeft:temp.width()/-2 + 10
+                });
+                temp.attr("radian", radians);
                 radians+=Math.PI/6;
             }
             move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
@@ -90,25 +86,58 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             minutes.css("color", "");
         }
         function draw_minutes(options){
+            numbers.html("").css({
+                width:options.size,
+                height:options.size,
+                top:0, left:0, opacity:1
+            });
             var colors=options.colors;
-            numbers.clearRect(0, 0, options.size, options.size);
-            numbers.textBaseline="middle";
-            numbers.fillStyle=colors.numerals;
-            numbers.font=options.fontSize+"px "+options.fontFamily;
-            numbers.textAlign="center";
+            numbers.css({
+                color:colors.numerals
+            })
             var radians=Math.PI/2;
             for (var i=0;i<12;i++){
-                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.6));
-                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.6));
-                numbers.fillText(i*5, x, y);
+                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.5));
+                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.5));
+                var temp=$("<div>").html(i*5).css({
+                    position:"absolute",
+                    top:y, left:x
+                });
+                numbers.append(temp);
+                temp.css({
+                    marginTop:temp.height()/-2,
+                    marginLeft:temp.width()/-2 + 10
+                });
+                temp.attr("radian", radians);
                 radians+=Math.PI/6;
             }
             move_hand(parseInt(container.attr("minute"))*Math.PI/30, options);
             hours.css("color", "");
             minutes.css("color", colors.hand);
         }
+        function transition(options, hour){
+            $(".kkc-clockface-numbers div").each(function(){
+                var u_r=radius+100;
+                var radians=parseFloat($(this).attr("radian"));
+                var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/1.75));
+                var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/1.75));
+                $(this).animate({top:y, left:x}, 200, "linear");
+            });
+            numbers.animate({
+                width:numbers.width()+200,
+                left:-100,
+                height:numbers.height()+200,
+                top:-100,
+                opacity:0
+            }, 200, "linear", function(){
+                if (!!hour)
+                    draw_hours(options);
+                else
+                    draw_minutes(options);
+            });
+        }
         function move_hand(radians, options){
-            $("#kitkatclock .kkc-canvas-hand").css({
+            $("#kitkatclock .kkc-clockface-hand").css({
                     '-webkit-transform': "rotate("+(radians*180/Math.PI)+"deg)",
                     '-moz-transform': "rotate("+(radians*180/Math.PI)+"deg)",
                     '-ms-transform': "rotate("+(radians*180/Math.PI)+"deg)",
@@ -123,24 +152,23 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var hours=$("#kitkatclock .kkc-hour");
         var minutes=$("#kitkatclock .kkc-minute");
         var am_pm=$("#kitkatclock .kkc-am-pm");
-        var canvas_cont=$("#kitkatclock .kkc-canvas-cont");
-        var clock=$("#kitkatclock .kkc-canvas-clock").attr({
-            width:options.size, height:options.size
-        }).css({
-            position:"absolute", top:0, left:0,
-            padding:"0px 10px"
-        })[0].getContext("2d");
-        var hand=$("#kitkatclock .kkc-canvas-hand").attr({
-            width:options.fontSize*1.35, height:options.size
-        }).css({
+        var clockface_cont=$("#kitkatclock .kkc-clockface-cont");
+        var clock=$("#kitkatclock .kkc-clockface-clock").css({
+            width:options.size, height:options.size,
+            position:"absolute", top:0, left:10,           
+            background: colors.clock,
+            borderRadius:"50%"
+        });
+        var cover=$(".kkc-clockface-cover");
+        var hand=$("#kitkatclock .kkc-clockface-hand").css({
+            width:options.fontSize*1.35, height:options.size,
             position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px)",
-        })[0].getContext("2d");
-        var numbers=$("#kitkatclock .kkc-canvas-numbers").attr({
-            width:options.size, height:options.size
-        }).css({
+        });
+        var numbers=$("#kitkatclock .kkc-clockface-numbers").css({
+            width:options.size, height:options.size,
             position:"absolute", top:0, left:0,
             padding:"0px 10px"
-        })[0].getContext("2d");
+        });
         var am_btn=$("#kitkatclock .kkc-am-btn");
         var pm_btn=$("#kitkatclock .kkc-pm-btn");
         var done=$("#kitkatclock .kkc-done-btn");
@@ -150,11 +178,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             color:colors.text, background:colors.top_indicator_background
         });
         am_pm.css({
-            fontSize:options.fontSize/2
+            fontSize:options.fontSize/2,
+            cursor:"pointer"
         });
-        canvas_cont.css({
+        clockface_cont.css({
             position:"relative", marginTop:4,
-            height:options.size, cursor:"pointer"
+            height:options.size, cursor:"pointer",
+            overflow:"hidden"
         });
         var time=options.time.split(":");
         var h=parseInt(time[0]);
@@ -180,13 +210,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             borderRadius:options.fontSize/2, cursor:"pointer"
         });
         hours.on("click", function(){
-            draw_hours(options);
+            transition(options, true);
             __kkc.hour_mode=true;
         }).css({
             cursor:"pointer"
         });
         minutes.on("click", function(){
-            draw_minutes(options);
+            transition(options);
             __kkc.hour_mode=false;
         }).css({
             cursor:"pointer"
@@ -201,34 +231,44 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         }
         hours.html(h);
         minutes.html((m<10?"0":"")+m);
-        am_pm.html(is_am?"AM":"PM");
+        am_pm.html(is_am?"AM":"PM").on("click", function(){
+            if (this.innerHTML=="AM"){
+                am_pm.html("PM");
+                pm_btn.css("background", colors.meridian_background_on);
+                am_btn.css("background", colors.meridian_background_off);
+            }
+            else {
+                am_pm.html("AM");
+                pm_btn.css("background", colors.meridian_background_off);
+                am_btn.css("background", colors.meridian_background_on);
+            }
+        });
         done.css({
             borderTop:"1px solid "+colors.border,
             marginTop:"4px", cursor:"pointer"
         });
-        var radius=options.size/2;
-        clock.clearRect(0, 0, options.size, options.size);
-        clock.fillStyle=colors.clock;
-        clock.arc(radius, radius, radius, 0, 2*Math.PI);
-        clock.fill();
-        hand.clearRect(0, 0, options.size, options.size);
+        window.radius=options.size/2;
         var hand_width=options.fontSize*1.35;
         var a_x=hand_width/2;
         var a_y=radius+(-1*(radius-options.fontSize/1.5));
-        hand.beginPath();
-        hand.moveTo(hand_width/2, radius);
-        hand.lineTo(a_x, a_y);
-        hand.strokeStyle=colors.hand;
-        hand.lineWidth=8;
-        hand.stroke();
-        hand.closePath();
-        hand.arc(a_x, a_y, options.fontSize*(1.35/2), 0, 2*Math.PI);
-        hand.fillStyle=colors.hand;
-        hand.fill();
+        hand.html("<div class='kkc-clockface-hand-hand'></div><div class='kkc-clockface-hand-arm'></div>");
+        $(".kkc-clockface-hand-hand").css({
+            position:"absolute",
+            top:0, left:0,
+            borderRadius:"50%",
+            width:options.fontSize*1.35,
+            height:options.fontSize*1.35,
+            background:colors.hand
+        });
+        $(".kkc-clockface-hand-arm").css({
+            width:8, height:"calc(50% - 10px)",
+            position:"absolute", 
+            top:10, left:"calc(50% - 4px)",
+            background:colors.hand
+        });
         __kkc.allow_draw=true;
         __kkc.hour_mode=true;
         __kkc.mouse_down=false;
-        draw_hours(options);
         move_hand((h==12?0:h)*(Math.PI/6), options);
         am_btn.on("click", function(){
             am_pm.html("AM");
@@ -240,14 +280,14 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             pm_btn.css("background", colors.meridian_background_on);
             am_btn.css("background", colors.meridian_background_off);
         });
-        canvas_cont.on("mousemove mousedown mouseup touchstart touchend touchcancel click touchmove", function(event){
+        clockface_cont.on("mousemove mousedown mouseup touchstart touchend touchcancel click touchmove", function(event){
             if (!__kkc.allow_draw)
                 return;
             if ($(event.target).is(am_btn)||
                 $(event.target).is(pm_btn))
                 return;
             var use_event;
-            var el_offset=canvas_cont.offset();
+            var el_offset=clockface_cont.offset();
             var event_offset={
                 left:event.pageX,
                 top:event.pageY
@@ -312,12 +352,16 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             if (use_event=="mouseup"){
                 if (__kkc.hour_mode){
                     __kkc.hour_mode=false;
-                    draw_minutes(options);
+                    transition(options);
                     __kkc.allow_draw=false;
                     setTimeout(function(){__kkc.allow_draw=true;}, 100);
                 }
             }
         });
+        cover.css({
+            width:"100%", height:"100%",
+            position:"absolute", top:0, left:0
+        })
         done.on("click", __kkc.finalize);
         container.css({
             width:options.size+20,
@@ -374,6 +418,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         container.css({
             top: plugin_position.top, left: plugin_position.left
         }).show();
+        draw_hours(options);
     }
 
     $.fn.kitkatclock=function(options){
@@ -423,23 +468,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         return this.each(function(){
             options=options||{};
             options.time=options.time||"12:00 AM";
-            var time=options.time.split(" ")[0];
-            var hour=time.split(":")[0];
-            hour=parseInt(hour);
-            if (hour==12){
-                hour=0;
-            }
-            var minute=time.split(":")[1];
-            var is_am=options.time.split(" ")[1].toLowerCase()=="am";
-            if (!is_am)
-                hour+=12;
-            if (hour<10)
-                hour="0"+hour;
-            var new_v=hour+":"+minute;
-            if (this.type=="time")
-                this.value=new_v;
-            else
-                this.value=options.time;
+            this.value=options.time;
             var clock_dim=options.size||350;
             if (typeof clock_dim !== "number"){
                 if (clock_dim.indexOf("pt"))
@@ -495,7 +524,11 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             return;
         }
         else if (__kkc.degrade) {
-            $("input[data-role='time'], input[type='time']").kitkatclock();
+            $("input[type='time']").attr({
+                type:"text",
+                'data-role':"time"
+            });
+            $("input[data-role='time']").kitkatclock();
         }
     };
 
@@ -506,15 +539,16 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var minutes=$("<span class='kkc-minute'>");
         var am_pm=$("<span class='kkc-am-pm'>");
         time_cont.append(hours).append(":").append(minutes).append(am_pm);
-        var canvas_cont=$("<div class='kkc-canvas-cont'>");
-        var clock=$("<canvas class='kkc-canvas-clock'>");
-        var hand=$("<canvas class='kkc-canvas-hand'>");
-        var numbers=$("<canvas class='kkc-canvas-numbers'>");
+        var clockface_cont=$("<div class='kkc-clockface-cont'>");
+        var clock=$("<div class='kkc-clockface-clock'>");
+        var hand=$("<div class='kkc-clockface-hand'>");
+        var numbers=$("<div class='kkc-clockface-numbers'>");
+        var cover=$("<div class='kkc-clockface-cover'>");
         var am_btn=$("<div class='kkc-am-btn'>AM</div>");
         var pm_btn=$("<div class='kkc-pm-btn'>PM</div>");
-        canvas_cont.append(clock).append(hand).append(numbers).append(am_btn).append(pm_btn);
+        clockface_cont.append(clock).append(hand).append(numbers).append(cover).append(am_btn).append(pm_btn);
         var done=$("<div class='kkc-done-btn'>Done</div>");
-        container.append(time_cont).append(canvas_cont).append(done);
+        container.append(time_cont).append(clockface_cont).append(done);
         $("body").append(container).on("click", function(event){
             var attr=$(event.target).attr("kkc-id");
             if ($("#kitkatclock").has(event.target).length==0 &&
