@@ -33,11 +33,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         $.fn.kitkatclock=function(){return this;};
         return;
     }
+    __kkc.animate_duration=350;
     __kkc.allow_draw=true;
     __kkc.hour_mode=true;
     __kkc.mouse_down=false;
     __kkc.finalize=false;
     __kkc.degrade=true;
+    __kkc.position_ratio=1.6;
     __kkc.finalize_wrap=function(){
         if (__kkc.finalize!==false)
             __kkc.finalize();
@@ -56,24 +58,19 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             container.hide();
         }
         function draw_hours(options){
-            numbers.html("").css({
-                width:options.size,
-                height:options.size,
-                top:0, left:0, opacity:1
-            });
             var colors=options.colors;
-            numbers.css({
+            numbers_h.html("").css({
                 color:colors.numerals
             })
             var radians=Math.PI/2;
             for (var i=0;i<12;i++){
-                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.75));
-                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.75));
+                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/__kkc.position_ratio));
+                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/__kkc.position_ratio));
                 var temp=$("<div>").html(i==0?12:i).css({
                     position:"absolute",
                     top:y, left:x
                 });
-                numbers.append(temp);
+                numbers_h.append(temp);
                 temp.css({
                     marginTop:temp.height()/-2,
                     marginLeft:temp.width()/-2 + 10
@@ -86,13 +83,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             minutes.css("color", "");
         }
         function draw_minutes(options){
-            numbers.html("").css({
-                width:options.size,
-                height:options.size,
-                top:0, left:0, opacity:1
-            });
             var colors=options.colors;
-            numbers.css({
+            numbers_m.html("").css({
                 color:colors.numerals
             })
             var radians=Math.PI/2;
@@ -103,7 +95,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                     position:"absolute",
                     top:y, left:x
                 });
-                numbers.append(temp);
+                numbers_m.append(temp);
                 temp.css({
                     marginTop:temp.height()/-2,
                     marginLeft:temp.width()/-2 + 10
@@ -111,30 +103,102 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 temp.attr("radian", radians);
                 radians+=Math.PI/6;
             }
-            move_hand(parseInt(container.attr("minute"))*Math.PI/30, options);
-            hours.css("color", "");
-            minutes.css("color", colors.hand);
         }
         function transition(options, hour){
-            $(".kkc-clockface-numbers div").each(function(){
-                var u_r=radius+100;
-                var radians=parseFloat($(this).attr("radian"));
-                var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/1.75));
-                var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/1.75));
-                $(this).animate({top:y, left:x}, 200, "linear");
-            });
-            numbers.animate({
-                width:numbers.width()+200,
-                left:-100,
-                height:numbers.height()+200,
-                top:-100,
-                opacity:0
-            }, 200, "linear", function(){
-                if (!!hour)
-                    draw_hours(options);
-                else
-                    draw_minutes(options);
-            });
+            if (numbers_h.css("opacity")==1
+                && !!hour)
+                return;
+            if (numbers_m.css("opacity")==1
+                && !hour)
+                return;
+            $(".kkc-clockface-hand").fadeOut(__kkc.animate_duration/2);
+            if (!hour){
+                $(".kkc-clockface-numbers-hours div").each(function(){
+                    var u_r=radius+100;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
+                });
+                $(".kkc-clockface-numbers-minutes div").each(function(){
+                    var u_r=radius-100;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).css({top:y, left:x});
+                    var u_r=radius;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
+                });
+                numbers_h.animate({
+                    width:options.size+200,
+                    left:-100,
+                    height:options.size+200,
+                    top:-100,
+                    opacity:0
+                }, __kkc.animate_duration, "flex");
+                numbers_m.css({
+                    opacity:0,
+                    top:100, left:100
+                }).animate({
+                    width:options.size,
+                    left:0,
+                    height:options.size,
+                    top:0,
+                    opacity:1
+                }, __kkc.animate_duration, "flex");
+                setTimeout(function(){
+                    move_hand(parseInt(container.attr("minute"))*Math.PI/30, options);
+                }, __kkc.animate_duration/2);
+                hours.css("color", "");
+                minutes.css("color", colors.hand);
+            }
+            else {
+                $(".kkc-clockface-numbers-minutes div").each(function(){
+                    var u_r=radius-100;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
+                });
+                $(".kkc-clockface-numbers-hours div").each(function(){
+                    var u_r=radius+100;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).css({top:y, left:x});
+                    var u_r=radius;
+                    var radians=parseFloat($(this).attr("radian"));
+                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
+                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
+                });
+                numbers_m.animate({
+                    width:options.size-200,
+                    left:100,
+                    height:options.size-200,
+                    top:100,
+                    opacity:0
+                }, __kkc.animate_duration, "flex");
+                numbers_h.css({
+                    opacity:0,
+                    top:-100, left:-100
+                }).animate({
+                    width:options.size,
+                    left:0,
+                    height:options.size,
+                    top:0,
+                    opacity:1
+                }, __kkc.animate_duration, "flex");
+                setTimeout(function(){
+                    move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
+                }, __kkc.animate_duration/2);
+                hours.css("color", colors.hand);
+                minutes.css("color", "");
+            }
+        $(".kkc-clockface-hand").fadeIn(__kkc.animate_duration/2);
         }
         function move_hand(radians, options){
             $("#kitkatclock .kkc-clockface-hand").css({
@@ -164,7 +228,12 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             width:options.fontSize*1.35, height:options.size,
             position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px)",
         });
-        var numbers=$("#kitkatclock .kkc-clockface-numbers").css({
+        var numbers_h=$("#kitkatclock .kkc-clockface-numbers-hours").css({
+            width:options.size, height:options.size,
+            position:"absolute", top:0, left:0,
+            padding:"0px 10px"
+        });
+        var numbers_m=$("#kitkatclock .kkc-clockface-numbers-minutes").css({
             width:options.size, height:options.size,
             position:"absolute", top:0, left:0,
             padding:"0px 10px"
@@ -419,8 +488,17 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
             top: plugin_position.top, left: plugin_position.left
         }).show();
         draw_hours(options);
+        move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
+        numbers_h.css("opacity", 1);
+        draw_minutes(options);
+        numbers_m.css("opacity", 0);
     }
-
+    $.easing.flex = function(t) {
+        if (t<1/2)
+            return (-1/8)*Math.sin(t*Math.PI*2);
+        else
+            return t*2 - 1;
+    }
     $.fn.kitkatclock=function(options){
         function normalize_color(c){
             if (c==null)
@@ -542,11 +620,12 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         var clockface_cont=$("<div class='kkc-clockface-cont'>");
         var clock=$("<div class='kkc-clockface-clock'>");
         var hand=$("<div class='kkc-clockface-hand'>");
-        var numbers=$("<div class='kkc-clockface-numbers'>");
+        var numbers_h=$("<div class='kkc-clockface-numbers-hours'>");
+        var numbers_m=$("<div class='kkc-clockface-numbers-minutes'>");
         var cover=$("<div class='kkc-clockface-cover'>");
         var am_btn=$("<div class='kkc-am-btn'>AM</div>");
         var pm_btn=$("<div class='kkc-pm-btn'>PM</div>");
-        clockface_cont.append(clock).append(hand).append(numbers).append(cover).append(am_btn).append(pm_btn);
+        clockface_cont.append(clock).append(hand).append(numbers_h).append(numbers_m).append(cover).append(am_btn).append(pm_btn);
         var done=$("<div class='kkc-done-btn'>Done</div>");
         container.append(time_cont).append(clockface_cont).append(done);
         $("body").append(container).on("click", function(event){
