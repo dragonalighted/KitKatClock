@@ -14,359 +14,211 @@ this license, visit
 http://creativecommons.org/licenses/by-nc-sa/4.0/
 =================================================
 */
-;(function( $ ) {
-    window["__kkc"]=[];
-    var vendor_prefixes="webkit moz ms o".split(" ");
-    var supported=false;
-    var test=document.createElement("div");
-    for (var i=0;i<vendor_prefixes.length;i++){
-        if (test.style["-"+vendor_prefixes[i]+"-transform"]!==undefined){
-            supported=true;
-            break;
-        }
+(function( $ ) {
+    function get_set(attr, val){
+        if (val===true)
+            val="true";
+        if (val===false)
+            val="false";
+        if (val===null ||
+            val===undefined)
+            var to_ret=$(".kitkat-clock").attr("data-"+attr);
+        else
+            var to_ret=$(".kitkat-clock").attr("data-"+attr, val);
+        if (to_ret=="true" ||
+            to_ret=="false")
+            to_ret=(to_ret=="true");
+        return to_ret;
     }
-    if (test.style["transform"]!==undefined)
-        supported=true;
-    if (!supported){
-        console.log("KitKatClock disabled, no CSS3 support");
-        __kkc="KitKatClock Disabled";
-        $.fn.kitkatclock=function(){return this;};
-        return;
-    }
-    __kkc.animate_duration=350;
-    __kkc.allow_draw=true;
-    __kkc.hour_mode=true;
-    __kkc.mouse_down=false;
-    __kkc.finalize=false;
-    __kkc.degrade=true;
-    __kkc.position_ratio=1.6;
-    __kkc.finalize_wrap=function(){
-        if (__kkc.finalize!==false)
-            __kkc.finalize();
-    }
-    __kkc.opener;
-    __kkc.setup=function(options){
-        __kkc.finalize=function(){
-            if (__kkc.opener===null)
-                return;
-            var h=hours.html().replace("&nbsp;", "");
-            var m=minutes.html();
-            var is_am=am_pm.html();
-            __kkc.opener.value=h+":"+m+" "+is_am;
-            var id=parseInt($(__kkc.opener).attr("kkc-id"));
-            __kkc[id].time=h+":"+m+" "+is_am;
-            container.hide();
-        }
-        function draw_hours(options){
-            var colors=options.colors;
-            numbers_h.html("").css({
-                color:colors.numerals
-            })
-            var radians=Math.PI/2;
-            for (var i=0;i<12;i++){
-                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/__kkc.position_ratio));
-                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/__kkc.position_ratio));
-                var temp=$("<div>").html(i==0?12:i).css({
-                    position:"absolute",
-                    top:y, left:x
-                });
-                numbers_h.append(temp);
-                temp.css({
-                    marginTop:temp.height()/-2,
-                    marginLeft:temp.width()/-2 + 10
-                });
-                temp.attr("radian", radians);
-                radians+=Math.PI/6;
-            }
-            move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
-            hours.css("color", colors.hand);
-            minutes.css("color", "");
-        }
-        function draw_minutes(options){
-            var colors=options.colors;
-            numbers_m.html("").css({
-                color:colors.numerals
-            })
-            var radians=Math.PI/2;
-            for (var i=0;i<12;i++){
-                var x=radius+(Math.cos(radians)*(-1)*(radius-options.fontSize/1.5));
-                var y=radius+(Math.sin(radians)*(-1)*(radius-options.fontSize/1.5));
-                var temp=$("<div>").html(i*5).css({
-                    position:"absolute",
-                    top:y, left:x
-                });
-                numbers_m.append(temp);
-                temp.css({
-                    marginTop:temp.height()/-2,
-                    marginLeft:temp.width()/-2 + 10
-                });
-                temp.attr("radian", radians);
-                radians+=Math.PI/6;
-            }
-        }
-        function transition(options, hour){
-            if (numbers_h.css("opacity")==1
-                && !!hour)
-                return;
-            if (numbers_m.css("opacity")==1
-                && !hour)
-                return;
-            $(".kkc-clockface-hand").fadeOut(__kkc.animate_duration/2);
-            if (!hour){
-                $(".kkc-clockface-numbers-hours div").each(function(){
-                    var u_r=radius+100;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
-                });
-                $(".kkc-clockface-numbers-minutes div").each(function(){
-                    var u_r=radius-100;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).css({top:y, left:x});
-                    var u_r=radius;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
-                });
-                numbers_h.animate({
-                    width:options.size+200,
-                    left:-100,
-                    height:options.size+200,
-                    top:-100,
-                    opacity:0
-                }, __kkc.animate_duration, "flex");
-                numbers_m.css({
-                    opacity:0,
-                    top:100, left:100
-                }).animate({
-                    width:options.size,
-                    left:0,
-                    height:options.size,
-                    top:0,
-                    opacity:1
-                }, __kkc.animate_duration, "flex");
-                setTimeout(function(){
-                    move_hand(parseInt(container.attr("minute"))*Math.PI/30, options);
-                }, __kkc.animate_duration/2);
-                hours.css("color", "");
-                minutes.css("color", colors.hand);
-            }
-            else {
-                $(".kkc-clockface-numbers-minutes div").each(function(){
-                    var u_r=radius-100;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
-                });
-                $(".kkc-clockface-numbers-hours div").each(function(){
-                    var u_r=radius+100;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).css({top:y, left:x});
-                    var u_r=radius;
-                    var radians=parseFloat($(this).attr("radian"));
-                    var x=u_r+(Math.cos(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    var y=u_r+(Math.sin(radians)*(-1)*(u_r-options.fontSize/__kkc.position_ratio));
-                    $(this).animate({top:y, left:x}, __kkc.animate_duration, "flex");
-                });
-                numbers_m.animate({
-                    width:options.size-200,
-                    left:100,
-                    height:options.size-200,
-                    top:100,
-                    opacity:0
-                }, __kkc.animate_duration, "flex");
-                numbers_h.css({
-                    opacity:0,
-                    top:-100, left:-100
-                }).animate({
-                    width:options.size,
-                    left:0,
-                    height:options.size,
-                    top:0,
-                    opacity:1
-                }, __kkc.animate_duration, "flex");
-                setTimeout(function(){
-                    move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
-                }, __kkc.animate_duration/2);
-                hours.css("color", colors.hand);
-                minutes.css("color", "");
-            }
-        $(".kkc-clockface-hand").fadeIn(__kkc.animate_duration/2);
-        }
-        function move_hand(radians, options){
-            $("#kitkatclock .kkc-clockface-hand").css({
-                    '-webkit-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                    '-moz-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                    '-ms-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                    '-o-transform': "rotate("+(radians*180/Math.PI)+"deg)",
-                    'transform': "rotate("+(radians*180/Math.PI)+"deg)"
+    function transition(mode, dur){
+        if (dur===null ||
+            dur===undefined)
+            dur=300;
+        if (mode=="minute"){
+            $(".kitkat-clock-minutes").show();
+            $(".kitkat-clock-hours").animate({
+                top:"-10%", left:"-10%",
+                width:"120%", height:"120%",
+                opacity:0
+            }, dur, 'flex', function(){
+                $(".kitkat-clock-hours").hide();
             });
-        }
-        var colors=options.colors;
-        var container=$("#kitkatclock");
-        $("*", container).off();
-        var time_cont=$("#kitkatclock .kkc-time-cont");
-        var hours=$("#kitkatclock .kkc-hour");
-        var minutes=$("#kitkatclock .kkc-minute");
-        var am_pm=$("#kitkatclock .kkc-am-pm");
-        var clockface_cont=$("#kitkatclock .kkc-clockface-cont");
-        var clock=$("#kitkatclock .kkc-clockface-clock").css({
-            width:options.size, height:options.size,
-            position:"absolute", top:0, left:10,           
-            background: colors.clock,
-            borderRadius:"50%"
-        });
-        var cover=$(".kkc-clockface-cover");
-        var hand=$("#kitkatclock .kkc-clockface-hand").css({
-            width:options.fontSize*1.35, height:options.size,
-            position:"absolute", top:0, left:"calc(50% - "+(options.fontSize*1.35/2)+"px)",
-        });
-        var numbers_h=$("#kitkatclock .kkc-clockface-numbers-hours").css({
-            width:options.size, height:options.size,
-            position:"absolute", top:0, left:0,
-            padding:"0px 10px"
-        });
-        var numbers_m=$("#kitkatclock .kkc-clockface-numbers-minutes").css({
-            width:options.size, height:options.size,
-            position:"absolute", top:0, left:0,
-            padding:"0px 10px"
-        });
-        var am_btn=$("#kitkatclock .kkc-am-btn");
-        var pm_btn=$("#kitkatclock .kkc-pm-btn");
-        var done=$("#kitkatclock .kkc-done-btn");
-        time_cont.css({
-            height:options.fontSize, width:"100%",
-            padding:"0px 0px 12px 0px",
-            color:colors.text, background:colors.top_indicator_background
-        });
-        am_pm.css({
-            fontSize:options.fontSize/2,
-            cursor:"pointer"
-        });
-        clockface_cont.css({
-            position:"relative", marginTop:4,
-            height:options.size, cursor:"pointer",
-            overflow:"hidden"
-        });
-        var time=options.time.split(":");
-        var h=parseInt(time[0]);
-        var m=parseInt(time[1].split(" ")[0]);
-        var is_am=time[1].toUpperCase().indexOf("AM")!=-1;
-        container.attr({
-            hour:h, minute:m
-        })
-        am_btn.css({
-            position:"absolute",
-            bottom:0, left:10,
-            width:options.fontSize, height:options.fontSize,
-            fontSize:options.fontSize/2, lineHeight:options.fontSize+"px",
-            textAlign:"center", border:"1px solid transparent",
-            borderRadius:options.fontSize/2, cursor:"pointer"
-        });
-        pm_btn.css({
-            position:"absolute",
-            bottom:0, right:10,
-            width:options.fontSize, height:options.fontSize,
-            fontSize:options.fontSize/2, lineHeight:options.fontSize+"px",
-            textAlign:"center", border:"1px solid transparent",
-            borderRadius:options.fontSize/2, cursor:"pointer"
-        });
-        hours.on("click", function(){
-            transition(options, true);
-            __kkc.hour_mode=true;
-        }).css({
-            cursor:"pointer"
-        });
-        minutes.on("click", function(){
-            transition(options);
-            __kkc.hour_mode=false;
-        }).css({
-            cursor:"pointer"
-        });
-        if (is_am){
-            am_btn.css("background", colors.meridian_background_on);
-            pm_btn.css("background", colors.meridian_background_off);
+            $(".kitkat-clock-minutes").css({
+                top:"10%", left:"10%",
+                width:"80%", height:"80%",
+                opacity:0
+            })
+            $(".kitkat-clock-minutes").animate({
+                top:"0%", left:"0%",
+                width:"100%", height:"100%",
+                opacity:1
+            }, dur, 'flex');
+            $(".kitkat-clock-minutes").show();
+            get_set("hourmode", false);
+            $(".kitkat-hour").removeClass("kitkat-time-active");
+            $(".kitkat-minute").addClass("kitkat-time-active");
+            var number=parseInt(get_set("minutes"));
+            if (isNaN(number))
+                number=0;
+            setTimeout(function(){$(".kitkat-clock-hand").css({
+                "-webkit-transform":"rotate("+(number*6)+"deg)"
+            });}, dur/2);
         }
         else {
-            pm_btn.css("background", colors.meridian_background_on);
-            am_btn.css("background", colors.meridian_background_off);
+            $(".kitkat-clock-hours").show();
+            $(".kitkat-clock-minutes").animate({
+                top:"10%", left:"10%",
+                width:"80%", height:"80%",
+                opacity:0
+            }, dur, 'flex', function(){
+                $(".kitkat-clock-minutes").hide();
+            });
+            $(".kitkat-clock-hours").css({
+                top:"-10%", left:"-10%",
+                width:"120%", height:"120%",
+                opacity:0
+            })
+            $(".kitkat-clock-hours").animate({
+                top:"0%", left:"0%",
+                width:"100%", height:"100%",
+                opacity:1
+            }, dur, 'flex');
+            get_set("hourmode", true);
+            $(".kitkat-hour").addClass("kitkat-time-active");
+            $(".kitkat-minute").removeClass("kitkat-time-active");
+            var number=parseInt(get_set("hours"));
+            if (isNaN(number))
+                number=0;
+            setTimeout(function(){$(".kitkat-clock-hand").css({
+                "-webkit-transform":"rotate("+(number*30)+"deg)"
+            });}, dur/2);
         }
-        hours.html(h);
-        minutes.html((m<10?"0":"")+m);
-        am_pm.html(is_am?"AM":"PM").on("click", function(){
-            if (this.innerHTML=="AM"){
-                am_pm.html("PM");
-                pm_btn.css("background", colors.meridian_background_on);
-                am_btn.css("background", colors.meridian_background_off);
+    }
+    $(function(){
+        var clock=$("<div class='kitkat-clock-element kitkat-container'>\
+                        <div class='kitkat-clock-element kitkat-time'>\
+                            <span class='kitkat-clock-element kitkat-hour'>12</span>\
+                            :\
+                            <span class='kitkat-clock-element kitkat-minute'>00</span>\
+                            <span class='kitkat-clock-element kitkat-am-pm'>AM</span>\
+                        </div>\
+                        <div class='kitkat-clock-element kitkat-clock'>\
+                            <div class='kitkat-clock-element kitkat-clock-body'>\
+                            </div>\
+                            <div class='kitkat-clock-element kitkat-clock-hand'>\
+                                <div class='kitkat-clock-element kitkat-clock-hand-line'></div>\
+                                <div class='kitkat-clock-element kitkat-clock-hand-end'></div>\
+                            </div>\
+                            <div class='kitkat-clock-element kitkat-clock-hours'>\
+                            </div>\
+                            <div class='kitkat-clock-element kitkat-clock-minutes'>\
+                            </div>\
+                            <div class='kitkat-clock-element kitkat-clock-cover'>\
+                            </div>\
+                            <div class='kitkat-clock-element kitkat-clock-am kitkat-clock-am-pm-active'><span>AM</span></div>\
+                            <div class='kitkat-clock-element kitkat-clock-pm'><span>PM</span></div>\
+                        </div>\
+                        <div class='kitkat-clock-element kitkat-done'>\
+                            Done\
+                        </div>\
+                    </div>");
+        $("body").append(clock).on("click", function(event){
+            if (!$(event.target).hasClass("kitkat-clock-element") &&
+                $(event.target).attr("data-role")!="time"){
+                var mins=parseInt(get_set("minutes"));
+                if (mins<10)
+                    mins="0"+mins;
+                $("input[data-kitkat-active=true]").val(get_set("hours")+":"+mins+(get_set("is_am")?" AM":" PM")).attr("data-kitkat-active", "false");
+                $(".kitkat-container").hide();
+            }
+        });
+        for (var i=0;i<12;i++){
+            var radian=Math.PI/2 + (i*Math.PI/6);
+            var x=.5-(.78*Math.cos(radian)/2);
+            var y=.5-(.78*Math.sin(radian)/2);
+            var tmp=$("<div>").html(i!=0?i:12).css({
+                position:"absolute",
+                top:(y*100)+"%",
+                left:(x*100)+"%"
+            });
+            $(".kitkat-clock-hours").append(tmp);
+        }
+        for (var i=0;i<12;i++){
+            var radian=Math.PI/2 + (i*Math.PI/6);
+            var x=.5-(.78*Math.cos(radian)/2);
+            var y=.5-(.78*Math.sin(radian)/2);
+            var tmp=$("<div>").html(i*5).css({
+                position:"absolute",
+                top:(y*100)+"%",
+                left:(x*100)+"%"
+            });
+            $(".kitkat-clock-minutes").append(tmp);
+        }
+        get_set("hourmode", true);
+        get_set("mousedown", false);
+        $(".kitkat-hour").addClass("kitkat-time-active").on("click", function(){
+            if (!get_set("hourmode"))
+                transition("hour");
+        });
+        $(".kitkat-minute").on("click", function(){
+            if (get_set("hourmode"))
+                transition("minute");
+        });
+        $(".kitkat-clock-hours").children().each(function(){
+            $(this).css({
+                marginTop:$(this).outerHeight()/-2,
+                marginLeft:$(this).outerWidth()/-2
+            });
+        });
+        $(".kitkat-clock-minutes").children().each(function(){
+            $(this).css({
+                marginTop:$(this).outerHeight()/-2,
+                marginLeft:$(this).outerWidth()/-2
+            })
+        });
+        $(".kitkat-clock-am").on("click", function(){
+            get_set("is_am", true);
+            $(".kitkat-clock-am").addClass("kitkat-clock-am-pm-active");
+            $(".kitkat-clock-pm").removeClass("kitkat-clock-am-pm-active");
+            $(".kitkat-am-pm").html("AM");
+        });
+        $(".kitkat-am-pm").on("click", function(){
+            if (get_set("is_am")){
+                $(".kitkat-clock-am").removeClass("kitkat-clock-am-pm-active");
+                $(".kitkat-clock-pm").addClass("kitkat-clock-am-pm-active");
+                $(".kitkat-am-pm").html("PM");
             }
             else {
-                am_pm.html("AM");
-                pm_btn.css("background", colors.meridian_background_off);
-                am_btn.css("background", colors.meridian_background_on);
+                $(".kitkat-clock-pm").removeClass("kitkat-clock-am-pm-active");
+                $(".kitkat-clock-am").addClass("kitkat-clock-am-pm-active");
+                $(".kitkat-am-pm").html("AM");
             }
+            get_set("is_am", !get_set("is_am"));
         });
-        done.css({
-            borderTop:"1px solid "+colors.border,
-            marginTop:"4px", cursor:"pointer"
+        $(".kitkat-clock-pm").on("click", function(){
+            get_set("is_am", false);
+            $(".kitkat-clock-pm").addClass("kitkat-clock-am-pm-active");
+            $(".kitkat-clock-am").removeClass("kitkat-clock-am-pm-active");
+            $(".kitkat-am-pm").html("PM");
         });
-        window.radius=options.size/2;
-        var hand_width=options.fontSize*1.35;
-        var a_x=hand_width/2;
-        var a_y=radius+(-1*(radius-options.fontSize/1.5));
-        hand.html("<div class='kkc-clockface-hand-hand'></div><div class='kkc-clockface-hand-arm'></div>");
-        $(".kkc-clockface-hand-hand").css({
-            position:"absolute",
-            top:0, left:0,
-            borderRadius:"50%",
-            width:options.fontSize*1.35,
-            height:options.fontSize*1.35,
-            background:colors.hand
-        });
-        $(".kkc-clockface-hand-arm").css({
-            width:8, height:"calc(50% - 10px)",
-            position:"absolute", 
-            top:10, left:"calc(50% - 4px)",
-            background:colors.hand
-        });
-        __kkc.allow_draw=true;
-        __kkc.hour_mode=true;
-        __kkc.mouse_down=false;
-        move_hand((h==12?0:h)*(Math.PI/6), options);
-        am_btn.on("click", function(){
-            am_pm.html("AM");
-            am_btn.css("background", colors.meridian_background_on);
-            pm_btn.css("background", colors.meridian_background_off);
-        });
-        pm_btn.on("click", function(){
-            am_pm.html("PM");
-            pm_btn.css("background", colors.meridian_background_on);
-            am_btn.css("background", colors.meridian_background_off);
-        });
-        clockface_cont.on("mousemove mousedown mouseup touchstart touchend touchcancel click touchmove", function(event){
-            if (!__kkc.allow_draw)
-                return;
-            if ($(event.target).is(am_btn)||
-                $(event.target).is(pm_btn))
-                return;
+        $(".kitkat-clock-minutes").hide();
+        $(".kitkat-done").on("click", function(){
+            var mins=parseInt(get_set("minutes"));
+            if (mins<10)
+                mins="0"+mins;
+            $("input[data-kitkat-active=true]").val(get_set("hours")+":"+mins+(get_set("is_am")?" AM":" PM")).attr("data-kitkat-active", "false");
+            $(".kitkat-container").hide();
+        })
+        $(".kitkat-clock-cover").on("mousemove mousedown mouseup touchstart touchend touchcancel click touchmove", function(event){
             var use_event;
-            var el_offset=clockface_cont.offset();
-            var event_offset={
-                left:event.pageX,
-                top:event.pageY
-            };
-            if (!event_offset.left){
-                event_offset.left=event.originalEvent.touches[0].pageX;
-                event_offset.top=event.originalEvent.touches[0].pageY;
+            if (event.type=="touchmove" ||
+                event.type=="touchstart"){
+                event.offsetX=event.originalEvent.touches[0].pageX;
+                event.offsetY=event.originalEvent.touches[0].pageY;
+                var cur_offset=$(".kitkat-clock-body").offset();
+                event.offsetX-=cur_offset.left;
+                event.offsetY-=cur_offset.top;
             }
-            var offsetX=event_offset.left-el_offset.left;
-            var offsetY=event_offset.top-el_offset.top;
             switch (event.type){
                 case "touchmove":use_event="mousemove";event.preventDefault();break;
                 case "touchend":use_event="mouseup";break;
@@ -374,266 +226,157 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 case "touchstart":use_event="mousedown";break;
                 default:use_event=event.type;
             }
+            var radius=$(".kitkat-clock-body").outerWidth()/2;
             if (use_event=="mousedown")
-                __kkc.mouse_down=true;
+                get_set("mousedown", true);
             if (use_event=="mouseup")
-                __kkc.mouse_down=false;
+                get_set("mousedown", false);
             if (use_event=="click" ||
                 use_event=="mousedown" ||
-                (use_event=="mousemove" && __kkc.mouse_down)){
-                var pieces=__kkc.hour_mode?12:60;
-                var x=offsetX-radius;
-                var y=offsetY-radius;
-                x/=radius*-1;
-                y/=radius*-1;
-                if (x>1 || y>1 || (x==0&&y==0))
-                    return;
-                var theta=Math.atan2(x,y);
-                if (theta>0)
-                    theta=(2*Math.PI)-theta;
-                theta=Math.abs(theta);
-                var number=(Math.PI/(pieces/2))*Math.round(theta/(Math.PI/(pieces/2)))/(Math.PI/(pieces/2));
+                (use_event=="mousemove" && get_set("mousedown"))) {
+                var pieces=get_set("hourmode")?12:60;
+                var x=event.offsetX-radius;
+                var y=event.offsetY-radius;
+                pieces/=2;
+                var z=Math.sqrt(x*x+y*y);
+                var theta=Math.asin(y/z);
+                var closest=(Math.PI/pieces)*Math.round(theta/(Math.PI/pieces));
+                closest/=Math.PI;
+                closest*=pieces;
+                var x_pos=x>0;
+                var start=pieces/2;
+                if (!x_pos){
+                    start*=3;
+                    closest*=-1;
+                }
+                var number=start+closest;
                 var radians=0;
-                radians+=number*Math.PI/(__kkc.hour_mode?6:30);
+                radians+=number*Math.PI/(get_set("hourmode")?6:30);
                 radians=(radians>2*Math.PI)?radians-(2*Math.PI):radians;
-                move_hand(radians, options);
-                if (__kkc.hour_mode){
-                    container.attr("hour", number);
-                    var minute=container.attr("minute")||0;
-                    minute=parseInt(minute);
-                    var hour=number;
-                    minute=Math.round(minute);
-                    minute=minute==60?0:minute;
-                    hours.html(((hour<10&&hour!=0)?"&nbsp;":"")+(hour==0?12:hour));
-                    minutes.html((minute<10?"0":"")+minute);
+                $(".kitkat-clock-hand").css({
+                    "-webkit-transform":"rotate("+radians*(180/Math.PI)+"deg)"
+                });
+                number=Math.round(number);
+                if (get_set("hourmode")){
+                    if (number==0)
+                        number=12;
+                    get_set("hours", number);
+                    $(".kitkat-hour").html(number);
+                    if (use_event=="mouseup" ||
+                        use_event=="click"){
+                        transition("minute");
+                    }
                 }
                 else {
-                    container.attr("minute", number);
-                    var hour=container.attr("hour")||0;
-                    hour=parseInt(hour);
-                    var minute=number;
-                    minute=Math.round(minute);
-                    minute=minute==60?0:minute;
-                    hours.html(((hour<10&&hour!=0)?"&nbsp;":"")+(hour==0?12:hour));
-                    minutes.html((minute<10?"0":"")+minute);
-                }
-            }
-            if (use_event=="mouseup"){
-                if (__kkc.hour_mode){
-                    __kkc.hour_mode=false;
-                    transition(options);
-                    __kkc.allow_draw=false;
-                    setTimeout(function(){__kkc.allow_draw=true;}, 100);
+                    if (number==60)
+                        number=0;
+                    get_set("minutes", number);
+                    if (number<10)
+                        number="0"+number;
+                    $(".kitkat-minute").html(number);
                 }
             }
         });
-        cover.css({
-            width:"100%", height:"100%",
-            position:"absolute", top:0, left:0
-        })
-        done.on("click", __kkc.finalize);
-        container.css({
-            width:options.size+20,
-            border:"3px solid "+colors.border,
-            fontSize:options.fontSize, textAlign:"center",
-            color:colors.text, background:colors.background,
-            fontFamily:options.fontFamily, position:"absolute"
-        });
-        var input_offset=$(__kkc.opener).offset();
-        var window_size={
-            width:$(document).width(),
-            height:$(document).height()
-        }
-        var plugin_size={
-            width:container.outerWidth(),
-            height:container.outerHeight()
-        }
-        var plugin_position={
-            top:input_offset.top,
-            left:input_offset.left
-        }
-        var current_scroll={
-            top:$("body").scrollTop(),
-            left:$("body").scrollLeft()
-        }
-        var current_viewport={
-            top:current_scroll.top,
-            bottom:current_scroll.top+window_size.height,
-            left:current_scroll.left,
-            right:current_scroll.left+window_size.width
-        };
-        if (plugin_size.width<=window_size.width){
-            while (plugin_position.left<current_viewport.left){
-                plugin_position.left++;
-            }
-            while (plugin_position.left+plugin_size.width>current_viewport.right){
-                plugin_position.left--;
-            }
-        }
-        else {
-            plugin_position.left=current_viewport.left-(plugin_size.width-window_size.width)/2;
-        }
-        if (plugin_size.height<=window_size.height){
-            while (plugin_position.top<current_viewport.top){
-                plugin_position.top++;
-            }
-            while (plugin_position.top+plugin_size.height>current_viewport.bottom){
-                plugin_position.top--;
-            }
-        }
-        else {
-            plugin_position.top=current_viewport.top-(plugin_size.height-window_size.height)/2;
-        }
-        container.css({
-            top: plugin_position.top, left: plugin_position.left
-        }).show();
-        draw_hours(options);
-        move_hand(parseInt(container.attr("hour"))*Math.PI/6, options);
-        numbers_h.css("opacity", 1);
-        draw_minutes(options);
-        numbers_m.css("opacity", 0);
-    }
+    $(".kitkat-container").hide();
+    $.fn.kitkatclock.noDegrade(true);
+    });
     $.easing.flex = function(t) {
         if (t<1/2)
             return (-1/8)*Math.sin(t*Math.PI*2);
         else
             return t*2 - 1;
     }
-    $.fn.kitkatclock=function(options){
-        function normalize_color(c){
-            if (c==null)
-                return null;
-            c=c.replace("#", "").replace(/grey/i, "gray");
-            if (c.indexOf("rgb")!=-1){
-                if (c.indexOf("rgba")!=-1)
-                    return c;
-                else {
-                    rgb=c.split("(")[1].split(")")[0];
-                    return "rgba("+rgb+",1)";
-                }
-            }
-            else if (!!html_colors[c.toLowerCase()]){
-                return html_colors[c.toLowerCase()];
-            }
-            else {
-                if (c.length==3){
-                    var r=c.substring(0,1);
-                    var g=c.substring(1,2);
-                    var b=c.substring(2,3);
-                    r+=r;
-                    g+=g;
-                    b+=b;
-                }
-                else {
-                    var r=c.substring(0,2);
-                    var g=c.substring(2,4);
-                    var b=c.substring(4,6);
-                }
-                return "rgba("+parseInt(r,16)+","+parseInt(g,16)+","+parseInt(b,16)+",1)";
-            }
-        }
-        function calculate_from_alpha(fg, bg, a){
-            bg=bg.replace(/rgba|\(|\)/g, "");
-            fg=fg.replace(/rgba|\(|\)/g, "");
-            bg=bg.split(",");
-            fg=fg.split(",");
-            return "rgba(" +
-                Math.round((1 - a) * parseInt(bg[0]) + parseInt(fg[0]) * a) + "," +
-                Math.round((1 - a) * parseInt(bg[1]) + parseInt(fg[1]) * a) + "," +
-                Math.round((1 - a) * parseInt(bg[2]) + parseInt(fg[2]) * a) + ",1)";
-        }
-        var html_colors={"aliceblue":"rgba(240,248,255,1)","antiquewhite":"rgba(250,235,215,1)","aqua":"rgba(0,255,255,1)","aquamarine":"rgba(127,255,212,1)","azure":"rgba(240,255,255,1)","beige":"rgba(245,245,220,1)","bisque":"rgba(255,228,196,1)","black":"rgba(0,0,0,1)","blanchedalmond":"rgba(255,235,205,1)","blue":"rgba(0,0,255,1)","blueviolet":"rgba(138,43,226,1)","brown":"rgba(165,42,42,1)","burlywood":"rgba(222,184,135,1)","cadetblue":"rgba(95,158,160,1)","chartreuse":"rgba(127,255,0,1)","chocolate":"rgba(210,105,30,1)","coral":"rgba(255,127,80,1)","cornflowerblue":"rgba(100,149,237,1)","cornsilk":"rgba(255,248,220,1)","crimson":"rgba(220,20,60,1)","cyan":"rgba(0,255,255,1)","darkblue":"rgba(0,0,139,1)","darkcyan":"rgba(0,139,139,1)","darkgoldenrod":"rgba(184,134,11,1)","darkgray":"rgba(169,169,169,1)","darkgreen":"rgba(0,100,0,1)","darkkhaki":"rgba(189,183,107,1)","darkmagenta":"rgba(139,0,139,1)","darkolivegreen":"rgba(85,107,47,1)","darkorange":"rgba(255,140,0,1)","darkorchid":"rgba(153,50,204,1)","darkred":"rgba(139,0,0,1)","darksalmon":"rgba(233,150,122,1)","darkseagreen":"rgba(143,188,143,1)","darkslateblue":"rgba(72,61,139,1)","darkslategray":"rgba(47,79,79,1)","darkturquoise":"rgba(0,206,209,1)","darkviolet":"rgba(148,0,211,1)","deeppink":"rgba(255,20,147,1)","deepskyblue":"rgba(0,191,255,1)","dimgray":"rgba(105,105,105,1)","dodgerblue":"rgba(30,144,255,1)","firebrick":"rgba(178,34,34,1)","floralwhite":"rgba(255,250,240,1)","forestgreen":"rgba(34,139,34,1)","fuchsia":"rgba(255,0,255,1)","gainsboro":"rgba(220,220,220,1)","ghostwhite":"rgba(248,248,255,1)","gold":"rgba(255,215,0,1)","goldenrod":"rgba(218,165,32,1)","gray":"rgba(128,128,128,1)","green":"rgba(0,128,0,1)","greenyellow":"rgba(173,255,47,1)","honeydew":"rgba(240,255,240,1)","hotpink":"rgba(255,105,180,1)","indianred":"rgba(205,92,92,1)","indigo":"rgba(75,0,130,1)","ivory":"rgba(255,255,240,1)","khaki":"rgba(240,230,140,1)","lavender":"rgba(230,230,250,1)","lavenderblush":"rgba(255,240,245,1)","lawngreen":"rgba(124,252,0,1)","lemonchiffon":"rgba(255,250,205,1)","lightblue":"rgba(173,216,230,1)","lightcoral":"rgba(240,128,128,1)","lightcyan":"rgba(224,255,255,1)","lightgoldenrodyellow":"rgba(250,250,210,1)","lightgray":"rgba(211,211,211,1)","lightgreen":"rgba(144,238,144,1)","lightpink":"rgba(255,182,193,1)","lightsalmon":"rgba(255,160,122,1)","lightseagreen":"rgba(32,178,170,1)","lightskyblue":"rgba(135,206,250,1)","lightslategray":"rgba(119,136,153,1)","lightsteelblue":"rgba(176,196,222,1)","lightyellow":"rgba(255,255,224,1)","lime":"rgba(0,255,0,1)","limegreen":"rgba(50,205,50,1)","linen":"rgba(250,240,230,1)","magenta":"rgba(255,0,255,1)","maroon":"rgba(128,0,0,1)","mediumaquamarine":"rgba(102,205,170,1)","mediumblue":"rgba(0,0,205,1)","mediumorchid":"rgba(186,85,211,1)","mediumpurple":"rgba(147,112,219,1)","mediumseagreen":"rgba(60,179,113,1)","mediumslateblue":"rgba(123,104,238,1)","mediumspringgreen":"rgba(0,250,154,1)","mediumturquoise":"rgba(72,209,204,1)","mediumvioletred":"rgba(199,21,133,1)","midnightblue":"rgba(25,25,112,1)","mintcream":"rgba(245,255,250,1)","mistyrose":"rgba(255,228,225,1)","moccasin":"rgba(255,228,181,1)","navajowhite":"rgba(255,222,173,1)","navy":"rgba(0,0,128,1)","oldlace":"rgba(253,245,230,1)","olive":"rgba(128,128,0,1)","olivedrab":"rgba(107,142,35,1)","orange":"rgba(255,165,0,1)","orangered":"rgba(255,69,0,1)","orchid":"rgba(218,112,214,1)","palegoldenrod":"rgba(238,232,170,1)","palegreen":"rgba(152,251,152,1)","paleturquoise":"rgba(175,238,238,1)","palevioletred":"rgba(219,112,147,1)","papayawhip":"rgba(255,239,213,1)","peachpuff":"rgba(255,218,185,1)","peru":"rgba(205,133,63,1)","pink":"rgba(255,192,203,1)","plum":"rgba(221,160,221,1)","powderblue":"rgba(176,224,230,1)","purple":"rgba(128,0,128,1)","red":"rgba(255,0,0,1)","rosybrown":"rgba(188,143,143,1)","royalblue":"rgba(65,105,225,1)","saddlebrown":"rgba(139,69,19,1)","salmon":"rgba(250,128,114,1)","sandybrown":"rgba(244,164,96,1)","seagreen":"rgba(46,139,87,1)","seashell":"rgba(255,245,238,1)","sienna":"rgba(160,82,45,1)","silver":"rgba(192,192,192,1)","skyblue":"rgba(135,206,235,1)","slateblue":"rgba(106,90,205,1)","slategray":"rgba(112,128,144,1)","snow":"rgba(255,250,250,1)","springgreen":"rgba(0,255,127,1)","steelblue":"rgba(70,130,180,1)","tan":"rgba(210,180,140,1)","teal":"rgba(0,128,128,1)","thistle":"rgba(216,191,216,1)","tomato":"rgba(255,99,71,1)","turquoise":"rgba(64,224,208,1)","violet":"rgba(238,130,238,1)","wheat":"rgba(245,222,179,1)","white":"rgba(255,255,255,1)","whitesmoke":"rgba(245,245,245,1)","yellow":"rgba(255,255,0,1)","yellowgreen":"rgba(154,205,50,1)"};
+    $.fn.kitcatclock=function(){
         return this.each(function(){
-            options=options||{};
-            options.time=options.time||"12:00 AM";
-            this.value=options.time;
-            var clock_dim=options.size||350;
-            if (typeof clock_dim !== "number"){
-                if (clock_dim.indexOf("pt"))
-                    clock_dim=parseFloat(clock_dim)*(4/3);
-                else
-                    clock_dim=parseFloat(clock_dim);
-            }
-            clock_dim-=20;
-            options.size=clock_dim;
-            var fontSize=options.fontSize||40;
-            if (typeof fontSize !== "number"){
-                if (fontSize.indexOf("pt"))
-                    fontSize=parseFloat(fontSize)*(4/3);
-                else
-                    fontSize=parseFloat(fontSize);
-            }
-            options.fontSize=fontSize;
-            options.fontFamily=options.fontFamily||"Verdana, sans-serif";
-            var colors=options.colors||{};
-            colors.text=colors.text||"#FFFFFF";
-            colors.clock=colors.clock||"#050505";
-            colors.numerals=colors.numerals||colors.text;
-            colors.hand=colors.hand||'#960000';
-            colors.background=colors.background||"#222222";
-            colors.meridian_background_on=colors.meridian_background_on||colors.hand;
-            colors.meridian_background_off=colors.meridian_background_off||null;
-            colors.meridian_text=colors.meridian_text||colors.text;
-            colors.top_indicator_selected=colors.top_indicator_selected||colors.hand;
-            colors.top_indicator_deselected=colors.top_indicator_deselected||colors.text;
-            colors.top_indicator_background=colors.top_indicator_background||colors.clock;
-            colors.border=colors.border||"#CCCCCC";
-            for (var key in colors){
-                colors[key]=normalize_color(colors[key]);
-            }
-            if (!colors.meridian_background_off){
-                colors.meridian_background_off=calculate_from_alpha(colors.meridian_background_on, colors.background, .6);
-            }
-            options.colors=colors;
-            __kkc.push(options);
-            $(this).attr("kkc-id", __kkc.length-1).on("mouseup", function(){
-                if (!$(this).is(":focus"))
-                    return;
-                this.blur();
-                __kkc.finalize_wrap();
-                __kkc.opener=this;
-                __kkc.setup(__kkc[parseInt($(this).attr("kkc-id"))]);
-            });
-        })
-    };
-    $.fn.kitkatclock.noDegrade=function(b){
-        if (b!==true){
-            __kkc.degrade=false;
-            return;
-        }
-        else if (__kkc.degrade) {
-            $("input[type='time']").attr({
-                type:"text",
-                'data-role':"time"
-            });
-            $("input[data-role='time']").kitkatclock();
-        }
-    };
-
-    $(function(){
-        var container=$("<div id='kitkatclock'>").hide();
-        var time_cont=$("<div class='kkc-time-cont'>");
-        var hours=$("<span class='kkc-hour'>");
-        var minutes=$("<span class='kkc-minute'>");
-        var am_pm=$("<span class='kkc-am-pm'>");
-        time_cont.append(hours).append(":").append(minutes).append(am_pm);
-        var clockface_cont=$("<div class='kkc-clockface-cont'>");
-        var clock=$("<div class='kkc-clockface-clock'>");
-        var hand=$("<div class='kkc-clockface-hand'>");
-        var numbers_h=$("<div class='kkc-clockface-numbers-hours'>");
-        var numbers_m=$("<div class='kkc-clockface-numbers-minutes'>");
-        var cover=$("<div class='kkc-clockface-cover'>");
-        var am_btn=$("<div class='kkc-am-btn'>AM</div>");
-        var pm_btn=$("<div class='kkc-pm-btn'>PM</div>");
-        clockface_cont.append(clock).append(hand).append(numbers_h).append(numbers_m).append(cover).append(am_btn).append(pm_btn);
-        var done=$("<div class='kkc-done-btn'>Done</div>");
-        container.append(time_cont).append(clockface_cont).append(done);
-        $("body").append(container).on("click", function(event){
-            var attr=$(event.target).attr("kkc-id");
-            if ($("#kitkatclock").has(event.target).length==0 &&
-                (typeof attr === 'undefined' || attr === false))
-                __kkc.finalize_wrap();
+            $(this).on("click", function(){
+                var time="12:00 AM"
+                if (!!this.value.match(/\d{1,2}\:\d{2} AM|PM/i))
+                    time=this.value;
+                var time_pieces=time.split(":");
+                get_set("hours", time_pieces[0]);
+                get_set("is_am", time_pieces[1].toLowerCase().indexOf("am")!=-1);
+                get_set("minutes", time_pieces[1].split(" ")[0]);
+                $(".kitkat-hour").html(time_pieces[0]);
+                $(".kitkat-minute").html(time_pieces[1].split(" ")[0]);
+                $(".kitkat-am-pm").html(time_pieces[1].split(" ")[1].toUpperCase());
+                $("input[data-kitkat-active=true]").attr("data-kitkat-active", "false");
+                $(this).attr("data-kitkat-active", "true");
+                $(".kitkat-clock-am, .kitkat-clock-pm").removeClass("kitkat-clock-am-pm-active");
+                $(".kitkat-clock-"+(get_set("is_am")?"am":"pm")).addClass("kitkat-clock-am-pm-active");
+                transition("hour", 0);
+                var container=$(".kitkat-container");
+                var input_offset=$(this).offset();
+                var window_size={
+                    width:$(window).width(),
+                    height:$(window).height()
+                }
+                var document_size={
+                    width:$(document).width(),
+                    height:$(document).height()
+                }
+                var plugin_size={
+                    width:container.outerWidth(),
+                    height:container.outerHeight()
+                }
+                var plugin_position={
+                    top:input_offset.top,
+                    left:input_offset.left
+                }
+                var current_scroll={
+                    top:$("body").scrollTop(),
+                    left:$("body").scrollLeft()
+                }
+                var current_viewport={
+                    top:current_scroll.top,
+                    bottom:current_scroll.top+window_size.height,
+                    left:current_scroll.left,
+                    right:current_scroll.left+window_size.width
+                };
+                while (plugin_position.top+plugin_size.height>document_size.height &&
+                        plugin_position.top>0){
+                    plugin_position.top-=1;
+                }
+                while (plugin_position.left+plugin_size.width>document_size.width &&
+                        plugin_position.left>0){
+                    plugin_position.left-=1;
+                }
+                if (plugin_size.width<=window_size.width){
+                    while (plugin_position.left<current_viewport.left){
+                        plugin_position.left++;
+                    }
+                    while (plugin_position.left+plugin_size.width>current_viewport.right){
+                        plugin_position.left--;
+                    }
+                }
+                else {
+                    plugin_position.left=current_viewport.left-(plugin_size.width-window_size.width)/2;
+                }
+                if (plugin_size.height<=window_size.height){
+                    while (plugin_position.top<current_viewport.top){
+                        plugin_position.top++;
+                    }
+                    while (plugin_position.top+plugin_size.height>current_viewport.bottom){
+                        plugin_position.top--;
+                    }
+                }
+                else {
+                    plugin_position.top=current_viewport.top-(plugin_size.height-window_size.height)/2;
+                }
+                container.css({
+                    position:"absolute",
+                    top: plugin_position.top, left: plugin_position.left
+                }).show();
+            })
         });
-        $().kitkatclock.noDegrade(true);
-    })
-}(jQuery));
+    }
+    $.fn.kitkatclock.noDegrade=function(run){
+        if (!run)
+            $.fn.kitkatclock=function(){};
+        else{
+            $("input[type=time]").attr({
+                type:"text","data-role":"time"
+            });
+            $("input[data-role=time]").kitkatclock();
+        }
+    }
+})( jQuery );
