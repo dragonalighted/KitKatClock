@@ -286,7 +286,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         else
             return t*2 - 1;
     }
-    $.fn.kitcatclock=function(){
+    $.fn.kitkatclock=function(){
         return this.each(function(){
             $(this).on("click", function(){
                 var time="12:00 AM"
