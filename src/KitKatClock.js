@@ -95,33 +95,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
         }
     }
     $(function(){
-        var clock=$("<div class='kitkat-clock-element kitkat-container'>\
-                        <div class='kitkat-clock-element kitkat-time'>\
-                            <span class='kitkat-clock-element kitkat-hour'>12</span>\
-                            :\
-                            <span class='kitkat-clock-element kitkat-minute'>00</span>\
-                            <span class='kitkat-clock-element kitkat-am-pm'>AM</span>\
-                        </div>\
-                        <div class='kitkat-clock-element kitkat-clock'>\
-                            <div class='kitkat-clock-element kitkat-clock-body'>\
-                            </div>\
-                            <div class='kitkat-clock-element kitkat-clock-hand'>\
-                                <div class='kitkat-clock-element kitkat-clock-hand-line'></div>\
-                                <div class='kitkat-clock-element kitkat-clock-hand-end'></div>\
-                            </div>\
-                            <div class='kitkat-clock-element kitkat-clock-hours'>\
-                            </div>\
-                            <div class='kitkat-clock-element kitkat-clock-minutes'>\
-                            </div>\
-                            <div class='kitkat-clock-element kitkat-clock-cover'>\
-                            </div>\
-                            <div class='kitkat-clock-element kitkat-clock-am kitkat-clock-am-pm-active'><span>AM</span></div>\
-                            <div class='kitkat-clock-element kitkat-clock-pm'><span>PM</span></div>\
-                        </div>\
-                        <div class='kitkat-clock-element kitkat-done'>\
-                            Done\
-                        </div>\
-                    </div>");
+        var clock=$("<div class='kitkat-clock-element kitkat-container'><div class='kitkat-clock-element kitkat-time'><span class='kitkat-clock-element kitkat-hour'>12</span>:<span class='kitkat-clock-element kitkat-minute'>00</span><span class='kitkat-clock-element kitkat-am-pm'>AM</span></div><div class='kitkat-clock-element kitkat-clock'><div class='kitkat-clock-element kitkat-clock-body'></div><div class='kitkat-clock-element kitkat-clock-hand'><div class='kitkat-clock-element kitkat-clock-hand-line'></div><div class='kitkat-clock-element kitkat-clock-hand-end'></div></div><div class='kitkat-clock-element kitkat-clock-hours'></div><div class='kitkat-clock-element kitkat-clock-minutes'></div><div class='kitkat-clock-element kitkat-clock-cover'></div><div class='kitkat-clock-element kitkat-clock-am kitkat-clock-am-pm-active'><span>AM</span></div><div class='kitkat-clock-element kitkat-clock-pm'><span>PM</span></div></div><div class='kitkat-clock-element kitkat-done'>Done</div></div>");
         $("body").append(clock).on("click", function(event){
             if (!$(event.target).hasClass("kitkat-clock-element") &&
                 $(event.target).attr("data-role")!="time"){
@@ -288,10 +262,16 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
     }
     $.fn.kitkatclock=function(){
         return this.each(function(){
-            $(this).on("click", function(){
+            var time="12:00 AM"
+            if (!!this.value.match(/\d{1,2}\:\d{2} AM|PM/i))
+                time=this.value;
+            this.value=time;
+            $(this).on("click focus", function(event){
+                event.preventDefault();
                 var time="12:00 AM"
                 if (!!this.value.match(/\d{1,2}\:\d{2} AM|PM/i))
                     time=this.value;
+                this.value=time;
                 var time_pieces=time.split(":");
                 get_set("hours", time_pieces[0]);
                 get_set("is_am", time_pieces[1].toLowerCase().indexOf("am")!=-1);
