@@ -102,7 +102,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/
                 var mins=parseInt(get_set("minutes"));
                 if (mins<10)
                     mins="0"+mins;
-                $("input[data-kitkat-active=true]").val(get_set("hours")+":"+mins+(get_set("is_am")?" AM":" PM")).attr("data-kitkat-active", "false");
+                $("input[data-kitkat-active=true]").val(get_set("hours")+":"+mins+(get_set("is_am")?" AM":" PM")).attr("data-kitkat-active", "false").trigger('change');
                 $(".kitkat-container").hide();
             }
         });
